@@ -1,20 +1,7 @@
-#  Delivery Checklist — Day 12 Lab Submission
 
 > **Student Name:** Phan Văn Tấn 
 > **Student ID:** 2A202600282
 > **Date:** 17/04/2026
-
----
-
-##  Submission Requirements
-
-Submit a **GitHub repository** containing:
-
-### 1. Mission Answers (40 points)
-
-Create a file `MISSION_ANSWERS.md` with your answers to all exercises:
-
-```markdown
 # Day 12 Lab - Mission Answers
 
 ## Part 1: Localhost vs Production
@@ -102,12 +89,12 @@ Create a file `MISSION_ANSWERS.md` with your answers to all exercises:
   (venv) (base) macos@MACBOOKPRO production % curl http://localhost:8000/ready
   {"ready":true,"in_flight_requests":1}% 
 ---
-
+```
 ### 2. Full Source Code - Lab 06 Complete (60 points)
 
 Your final production-ready agent with all files:
 
-```
+```bash
 your-repo/
 ├── app/
 │   ├── main.py              # Main application
@@ -140,7 +127,7 @@ your-repo/
 =======================================================
   Production Readiness Check — Day 12 Lab
 =======================================================
-
+```
 📁 Required Files
   ✅ Dockerfile exists
   ✅ docker-compose.yml exists
@@ -173,123 +160,5 @@ your-repo/
   Result: 20/20 checks passed (100%)
   🎉 PRODUCTION READY! Deploy nào!
 =======================================================
----
-
-### 3. Service Domain Link
-
-Create a file `DEPLOYMENT.md` with your deployed service information:
-
-```markdown
-# Deployment Information
-
-## Public URL
-https://ai-agent-qb4o.onrender.com
-
-## Platform
-Railway / Render / Cloud Run
-
-## Test Commands
-
-### Health Check
-```bash
-curl https://ai-agent-qb4o.onrender.com/auth/health/
-# Expected: {"status": "ok"}
-```
-
-### API Test (with authentication)
-```bash
-curl -X POST https://ai-agent-qb4o.onrender.com/auth/login/ \
-  -H "Content-Type: application/json" \
-  -d '{"email":"lap@gmail.com","password":"123456"}'
-- result :{"success": true, "message": "Login successful", "user_id": "6896f2040d8ae3b3c114a531", "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjg5NmYyMDQwZDhhZTNiM2MxMTRhNTMxIiwicm9sZSI6InVzZXIiLCJleHAiOjE3NzY0NTUwMjAsInB1cnBvc2UiOiJ1c2VyX2F1dGhlbnRpY2F0aW9uIn0.UqmhI5EJgj1gHaxu9hxHdcdCJBvh8_ZkoosWBAHGOs4", "role": "user"}
-
 
 ```
-
-## Environment Variables Set
-- PORT
-- REDIS_URL
-- AGENT_API_KEY
-- LOG_LEVEL
-
-## Screenshots
-- [Deployment dashboard](screenshots/dashboard.png)
-- [Service running](screenshots/running.png)
-- [Test results](screenshots/image5.png)
-```
-
-##  Pre-Submission Checklist
-
-- [ ] Repository is public (or instructor has access)
-- [ ] `MISSION_ANSWERS.md` completed with all exercises
-- [ ] `DEPLOYMENT.md` has working public URL
-- [ ] All source code in `app/` directory
-- [ ] `README.md` has clear setup instructions
-- [ ] No `.env` file committed (only `.env.example`)
-- [ ] No hardcoded secrets in code
-- [ ] Public URL is accessible and working
-- [ ] Screenshots included in `screenshots/` folder
-- [ ] Repository has clear commit history
-
----
-
-##  Self-Test
-
-Before submitting, verify your deployment:
-
-```bash
-# 1. Health check
-curl https://your-app.railway.app/health
-
-# 2. Authentication required
-curl https://your-app.railway.app/ask
-# Should return 401
-
-# 3. With API key works
-curl -H "X-API-Key: YOUR_KEY" https://your-app.railway.app/ask \
-  -X POST -d '{"user_id":"test","question":"Hello"}'
-# Should return 200
-
-# 4. Rate limiting
-for i in {1..15}; do 
-  curl -H "X-API-Key: YOUR_KEY" https://your-app.railway.app/ask \
-    -X POST -d '{"user_id":"test","question":"test"}'; 
-done
-# Should eventually return 429
-```
-
----
-
-##  Submission
-
-**Submit your GitHub repository URL:**
-
-```
-https://github.com/PhanVanTann/PhanVanTan_2A202600282_Day12
-```
-
-**Deadline:** 17/4/2026
-
----
-
-##  Quick Tips
-
-1.  Test your public URL from a different device
-2.  Make sure repository is public or instructor has access
-3.  Include screenshots of working deployment
-4.  Write clear commit messages
-5.  Test all commands in DEPLOYMENT.md work
-6.  No secrets in code or commit history
-
----
-
-##  Need Help?
-
-- Check [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
-- Review [CODE_LAB.md](CODE_LAB.md)
-- Ask in office hours
-- Post in discussion forum
-
----
-
-**Good luck! **
