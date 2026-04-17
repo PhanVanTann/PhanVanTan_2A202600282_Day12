@@ -192,16 +192,19 @@ Railway / Render / Cloud Run
 
 ### Health Check
 ```bash
-curl https://your-agent.railway.app/health
+curl https://ai-agent-qb4o.onrender.com/auth/health/
 # Expected: {"status": "ok"}
 ```
 
 ### API Test (with authentication)
 ```bash
-curl -X POST https://your-agent.railway.app/ask \
-  -H "X-API-Key: YOUR_KEY" \
+curl -X POST https://ai-agent-qb4o.onrender.com/auth/login/ \
   -H "Content-Type: application/json" \
-  -d '{"user_id": "test", "question": "Hello"}'
+  -d '{"email":"lap@gmail.com","password":"123456"}'
+- result :{"success": true, "message": "Login successful", "user_id": "6896f2040d8ae3b3c114a531", "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNjg5NmYyMDQwZDhhZTNiM2MxMTRhNTMxIiwicm9sZSI6InVzZXIiLCJleHAiOjE3NzY0NTUwMjAsInB1cnBvc2UiOiJ1c2VyX2F1dGhlbnRpY2F0aW9uIn0.UqmhI5EJgj1gHaxu9hxHdcdCJBvh8_ZkoosWBAHGOs4", "role": "user"}
+
+lấy access_token gán vào dưới
+
 ```
 
 ## Environment Variables Set
@@ -213,7 +216,7 @@ curl -X POST https://your-agent.railway.app/ask \
 ## Screenshots
 - [Deployment dashboard](screenshots/dashboard.png)
 - [Service running](screenshots/running.png)
-- [Test results](screenshots/test.png)
+- [Test results](screenshots/image5.png)
 ```
 
 ##  Pre-Submission Checklist
