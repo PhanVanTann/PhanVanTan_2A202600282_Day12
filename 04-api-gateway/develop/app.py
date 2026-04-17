@@ -9,16 +9,16 @@ Chạy:
 
 Test:
     # Có key → 200
-    curl -H "X-API-Key: my-secret-key" -X POST \\
-         -H "Content-Type: application/json" \\
-         -d '{"question":"hello"}' \\
+    curl -H "X-API-Key: demo-key-change-in-production" -X POST \
+         -H "Content-Type: application/json" \
+         -d '{"question":"hello"}' \
          http://localhost:8000/ask
 
     # Không có key → 401
     curl -X POST -H "Content-Type: application/json" \\
          -d '{"question":"hello"}' \\
          http://localhost:8000/ask
-"""
+""" 
 import os
 
 

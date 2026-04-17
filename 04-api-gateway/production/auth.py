@@ -29,7 +29,7 @@ DEMO_USERS = {
     "teacher": {"password": "teach456", "role": "admin", "daily_limit": 1000},
 }
 
-security = HTTPBearer(auto_error=False)
+security = HTTPBearer(auto_error=False) 
 
 
 def create_token(username: str, role: str) -> str:

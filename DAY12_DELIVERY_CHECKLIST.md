@@ -1,8 +1,8 @@
 #  Delivery Checklist — Day 12 Lab Submission
 
-> **Student Name:** _________________________  
-> **Student ID:** _________________________  
-> **Date:** _________________________
+> **Student Name:** Phan Văn Tấn 
+> **Student ID:** 2A202600282
+> **Date:** 17/04/2026
 
 ---
 
@@ -20,48 +20,87 @@ Create a file `MISSION_ANSWERS.md` with your answers to all exercises:
 ## Part 1: Localhost vs Production
 
 ### Exercise 1.1: Anti-patterns found
-1. [Your answer]
-2. [Your answer]
+1. API key và DATABASE_URL hardcode trong code
+2. Không có config management có thể bỏ trong file .env
+3. Print thay vì proper logging khó quản lý log và có thể print luôn cả key bí mật nữa.
+4. Không có health check endpoint
+5. Port cố định — không đọc từ environment
 ...
 
 ### Exercise 1.3: Comparison table
-| Feature | Develop | Production | Why Important? |
-|---------|---------|------------|----------------|
-| Config  | ...     | ...        | ...            |
+| Feature | Basic | Advanced | Tại sao quan trọng? |
+|---------|-------|----------|---------------------|
+| Config | Hardcode | Env vars |Ngăn chặn lộ API Key/Password lên Git. Dễ dàng thay đổi cấu hình cho các môi trường khác nhau (Dev/Prod) mà không cần sửa code.|
+| Health check | không | Có endpoint riêng |Giúp các nền tảng (Render, Kubernetes) biết ứng dụng có đang sống không để tự động khởi động lại (auto-restart) hoặc điều hướng traffic nếu app bị treo. |
+| Logging | print() | JSON | Log JSON giúp các hệ thống quản lý log dễ dàng parse (đọc/hiểu), lọc lỗi theo mức độ (INFO, ERROR) và tìm kiếm nguyên nhân khi hệ thống sập. |
+| Shutdown | Đột ngột | Graceful | Cho phép ứng dụng xử lý nốt các request đang dang dở và đóng kết nối database an toàn trước khi tắt, tránh mất mát dữ liệu của người dùng.|
 ...
 
 ## Part 2: Docker
 
 ### Exercise 2.1: Dockerfile questions
-1. Base image: [Your answer]
-2. Working directory: [Your answer]
+1. Base image là gì? Nó sẽ tái sử dụng lại tối đa những gì chưa bị thay đổi ở các lần build trước, giúp tốc độ phát triển và cập nhật phần mềm nhanh hơn gấp nhiều lần.
+2. Working directory là gì? là thư mục hiện tại mà chương trình hoặc terminal đang “đứng” để thực thi lệnh và truy cập file.
+3. Tại sao COPY requirements.txt trước? tận dụng Docker cache,tăng tốc build,tránh reinstall dependencies không cần thiết.
+4. CMD vs ENTRYPOINT khác nhau thế nào? CMD là lệnh mặc định có thể bị ghi đè,ENTRYPOINT lệnh cố định không dễ bị override
 ...
 
 ### Exercise 2.3: Image size comparison
-- Develop: [X] MB
-- Production: [Y] MB
-- Difference: [Z]%
+- Develop: [413] MB
+- Production: [56.7] MB
+- Difference: [86.3]%
 
 ## Part 3: Cloud Deployment
 
-### Exercise 3.1: Railway deployment
-- URL: https://your-app.railway.app
+### Exercise 3.1: Render deployment
+- URL: https://ai-agent-qb4o.onrender.com
 - Screenshot: [Link to screenshot in repo]
+![alt text](screenshot/image.png)
+![alt text](screenshot/image1.png)
 
 ## Part 4: API Security
 
 ### Exercise 4.1-4.3: Test results
 [Paste your test outputs]
-
+#develop
+##  Không có key
+(venv) (base) macos@MACBOOKPRO develop % curl -X POST -H "Content-Type: application/json" \ 
+         -d '{"question":"hello"}' \ 
+         http://localhost:8000/ask
+{"detail":"Missing API key. Include header: X-API-Key: <your-key>"}%  
+## có key 
+(venv) (base) macos@MACBOOKPRO develop % curl -H "X-API-Key: demo-key-change-in-production" \
+     -X POST \
+     "http://localhost:8000/ask?question=hello"
+{"question":"hello","answer":"Đây là câu trả lời từ AI agent (mock). Trong production, đây sẽ là response từ OpenAI/Anthropic."}%  
+#production
+## lấy token
+(venv) (base) macos@MACBOOKPRO production % curl -X POST http://localhost:8000/auth/token \ 
+         -H "Content-Type: application/json" \ 
+         -d '{"username": "student", "password": "demo123"}'
+{"access_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHVkZW50Iiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NzY0MjU1NzMsImV4cCI6MTc3NjQyOTE3M30.997fJDX7x0qsZCP1pRTh6aHoBLWSbWgoPFAYWmcpMk8","token_type":"bearer","expires_in_minutes":60,"hint":"Include in header: Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."}%           
+## dùng token
+(venv) (base) macos@MACBOOKPRO production % curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHVkZW50Iiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NzY0MjU1NzMsImV4cCI6MTc3NjQyOTE3M30.997fJDX7x0qsZCP1pRTh6aHoBLWSbWgoPFAYWmcpMk8" \  
+         -X POST http://localhost:8000/ask \
+         -H "Content-Type: application/json" \
+         -d '{"question": "what is docker?"}'
+{"question":"what is docker?","answer":"Container là cách đóng gói app để chạy ở mọi nơi. Build once, run anywhere!","usage":{"requests_remaining":9,"budget_remaining_usd":1.9e-05}}%  
 ### Exercise 4.4: Cost guard implementation
-[Explain your approach]
+- Algorithm nào được dùng? Hệ thống sử dụng Sliding Window Counter. Mỗi user có một danh sách timestamp (deque), các request cũ ngoài khoảng 60 giây sẽ bị loại bỏ trước khi kiểm tra limit.
+- Limit là bao nhiêu requests/minute?	User thường: 10 requests/phút, Admin: 100 requests/phút
+- Làm sao bypass limit cho admin?Admin không hoàn toàn bypass mà được cấp limit cao hơn bằng cách sử dụng một rate limiter riêng (rate_limiter_admin). Khi hệ thống nhận request, nếu role là admin thì sẽ dùng limiter này thay vì limiter của user thường.
 
 ## Part 5: Scaling & Reliability
 
 ### Exercise 5.1-5.5: Implementation notes
 [Your explanations and test results]
 ```
-
+- 5.1
+  (venv) (base) macos@MACBOOKPRO production % curl http://localhost:8000/health
+  {"status":"ok","uptime_seconds":10.6,"version":"1.0.0","environment":"development","timestamp":"2026-04-17T12:12:42.584008+00:00","checks":{"memory":{"status":"ok","used_percent":77.8}}}%  
+- 5.2
+  (venv) (base) macos@MACBOOKPRO production % curl http://localhost:8000/ready
+  {"ready":true,"in_flight_requests":1}% 
 ---
 
 ### 2. Full Source Code - Lab 06 Complete (60 points)
@@ -108,7 +147,7 @@ Create a file `DEPLOYMENT.md` with your deployed service information:
 # Deployment Information
 
 ## Public URL
-https://your-agent.railway.app
+https://phanvantan-2a202600282-day12.onrender.com
 
 ## Platform
 Railway / Render / Cloud Run
@@ -188,7 +227,7 @@ done
 **Submit your GitHub repository URL:**
 
 ```
-https://github.com/your-username/day12-agent-deployment
+https://github.com/PhanVanTann/PhanVanTan_2A202600282_Day12
 ```
 
 **Deadline:** 17/4/2026

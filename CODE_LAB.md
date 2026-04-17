@@ -67,14 +67,13 @@ cd 01-localhost-vs-production/develop
 **Nhiệm vụ:** Đọc `app.py` và tìm ít nhất 5 vấn đề.
 
 <details>
-<summary> Gợi ý</summary>
 
 Tìm:
-- API key hardcode
-- Port cố định
-- Debug mode
-- Không có health check
-- Không xử lý shutdown
+1. API key và DATABASE_URL hardcode trong code
+2. Không có config management có thể bỏ trong file .env
+3. Print thay vì proper logging khó quản lý log và có thể print luôn cả key bí mật nữa.
+4. Không có health check endpoint
+5. Port cố định — không đọc từ environment
 
 </details>
 
@@ -107,17 +106,17 @@ python app.py
 
 | Feature | Basic | Advanced | Tại sao quan trọng? |
 |---------|-------|----------|---------------------|
-| Config | Hardcode | Env vars | ... |
-| Health check |  |  | ... |
-| Logging | print() | JSON | ... |
-| Shutdown | Đột ngột | Graceful | ... |
+| Config | Hardcode | Env vars |Ngăn chặn lộ API Key/Password lên Git. Dễ dàng thay đổi cấu hình cho các môi trường khác nhau (Dev/Prod) mà không cần sửa code.|
+| Health check | không | Có endpoint riêng |Giúp các nền tảng (Render, Kubernetes) biết ứng dụng có đang sống không để tự động khởi động lại (auto-restart) hoặc điều hướng traffic nếu app bị treo. |
+| Logging | print() | JSON | Log JSON giúp các hệ thống quản lý log dễ dàng parse (đọc/hiểu), lọc lỗi theo mức độ (INFO, ERROR) và tìm kiếm nguyên nhân khi hệ thống sập. |
+| Shutdown | Đột ngột | Graceful | Cho phép ứng dụng xử lý nốt các request đang dang dở và đóng kết nối database an toàn trước khi tắt, tránh mất mát dữ liệu của người dùng.|
 
 ###  Checkpoint 1
 
-- [ ] Hiểu tại sao hardcode secrets là nguy hiểm
-- [ ] Biết cách dùng environment variables
-- [ ] Hiểu vai trò của health check endpoint
-- [ ] Biết graceful shutdown là gì
+- [X] Hiểu tại sao hardcode secrets là nguy hiểm
+- [X] Biết cách dùng environment variables
+- [X] Hiểu vai trò của health check endpoint
+- [X] Biết graceful shutdown là gì
 
 ---
 
@@ -143,10 +142,10 @@ cd ../../02-docker/develop
 
 **Nhiệm vụ:** Đọc `Dockerfile` và trả lời:
 
-1. Base image là gì?
-2. Working directory là gì?
-3. Tại sao COPY requirements.txt trước?
-4. CMD vs ENTRYPOINT khác nhau thế nào?
+1. Base image là gì? Nó sẽ tái sử dụng lại tối đa những gì chưa bị thay đổi ở các lần build trước, giúp tốc độ phát triển và cập nhật phần mềm nhanh hơn gấp nhiều lần.
+2. Working directory là gì? là thư mục hiện tại mà chương trình hoặc terminal đang “đứng” để thực thi lệnh và truy cập file.
+3. Tại sao COPY requirements.txt trước? tận dụng Docker cache,tăng tốc build,tránh reinstall dependencies không cần thiết.
+4. CMD vs ENTRYPOINT khác nhau thế nào? CMD là lệnh mặc định có thể bị ghi đè,ENTRYPOINT lệnh cố định không dễ bị override
 
 ###  Exercise 2.2: Build và run
 
@@ -188,6 +187,33 @@ docker images | grep my-agent
 ###  Exercise 2.4: Docker Compose stack
 
 **Nhiệm vụ:** Đọc `docker-compose.yml` và vẽ architecture diagram.
+
+                         ┌───────────────┐
+                         │   Client      │
+                         │ (Browser/API) │
+                         └──────┬────────┘
+                                │ HTTP/HTTPS
+                                ▼
+                     ┌─────────────────────┐
+                     │       Nginx         │
+                     │ Reverse Proxy + LB  │
+                     └──────┬───────┬──────┘
+                            │       │
+                  ┌─────────▼─┐   ┌─▼─────────┐
+                  │  Agent #1 │   │  Agent #2 │
+                  │ FastAPI   │   │ FastAPI   │
+                  └──────┬────┘   └────┬──────┘
+                         │             │
+                         └──────┬──────┘
+                                │
+        ┌───────────────────────┼───────────────────────┐
+        │                       │                       │
+        ▼                       ▼                       ▼
+┌───────────────┐     ┌────────────────┐      ┌──────────────────┐
+│     Redis     │     │    Qdrant      │      │   (Optional)      │
+│ Cache / Rate  │     │ Vector DB (RAG)│      │ External APIs     │
+│ Limiting      │     │ Embeddings     │      │ (LLM, etc.)       │
+└───────────────┘     └────────────────┘      └──────────────────┘
 
 ```bash
 docker compose up
@@ -350,6 +376,7 @@ python app.py
 curl http://localhost:8000/ask -X POST \
   -H "Content-Type: application/json" \
   -d '{"question": "Hello"}'
+# Without API key
 
 #  Có key
 curl http://localhost:8000/ask -X POST \
@@ -375,7 +402,7 @@ curl http://localhost:8000/token -X POST \
   -d '{"username": "admin", "password": "secret"}'
 ```
 
-3. Dùng token để gọi API:
+3. Dùng token để gọi API: 
 ```bash
 TOKEN="<token_từ_bước_2>"
 curl http://localhost:8000/ask -X POST \
@@ -387,9 +414,9 @@ curl http://localhost:8000/ask -X POST \
 ###  Exercise 4.3: Rate limiting
 
 **Nhiệm vụ:** Đọc `rate_limiter.py` và trả lời:
-- Algorithm nào được dùng? (Token bucket? Sliding window?)
-- Limit là bao nhiêu requests/minute?
-- Làm sao bypass limit cho admin?
+- Algorithm nào được dùng? Hệ thống sử dụng Sliding Window Counter. Mỗi user có một danh sách timestamp (deque), các request cũ ngoài khoảng 60 giây sẽ bị loại bỏ trước khi kiểm tra limit.
+- Limit là bao nhiêu requests/minute?	User thường: 10 requests/phút, Admin: 100 requests/phút
+- Làm sao bypass limit cho admin?Admin không hoàn toàn bypass mà được cấp limit cao hơn bằng cách sử dụng một rate limiter riêng (rate_limiter_admin). Khi hệ thống nhận request, nếu role là admin thì sẽ dùng limiter này thay vì limiter của user thường.
 
 Test:
 ```bash
@@ -539,7 +566,7 @@ signal.signal(signal.SIGTERM, shutdown_handler)
 Test:
 ```bash
 python app.py &
-PID=$!
+PID=$! 
 
 # Gửi request
 curl http://localhost:8000/ask -X POST \
@@ -628,7 +655,7 @@ Script này:
 - [ ] Test stateless design
 
 ---
-
+**
 ## Part 6: Final Project (60 phút)
 
 ###  Objective
@@ -800,7 +827,7 @@ def check_rate_limit(user_id: str):
 ```python
 def check_budget(user_id: str):
     # TODO: Check monthly spending
-    # Raise HTTPException(402) if exceeded
+    # Raise HTTPException(402) if **exceeded**
     pass
 ```
 
@@ -868,7 +895,7 @@ Script sẽ kiểm tra:
 -  Graceful shutdown (SIGTERM handled)
 -  Stateless (state trong Redis, không trong memory)
 -  Structured logging (JSON format)
-
+**
 ###  Grading Rubric
 
 | Criteria | Points | Description |

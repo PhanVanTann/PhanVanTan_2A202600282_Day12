@@ -17,11 +17,11 @@ Lấy token:
          -H "Content-Type: application/json" \\
          -d '{"username": "student", "password": "demo123"}'
 
-Dùng token:
-    curl -H "Authorization: Bearer <token>" \\
-         -X POST http://localhost:8000/ask \\
-         -H "Content-Type: application/json" \\
-         -d '{"question": "what is docker?"}'
+Dùng token: 
+    curl -H "Authorization: Bearer <eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJzdHVkZW50Iiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NzY0MjU1NzMsImV4cCI6MTc3NjQyOTE3M30.997fJDX7x0qsZCP1pRTh6aHoBLWSbWgoPFAYWmcpMk8>" \
+         -X POST http://localhost:8000/ask \
+         -H "Content-Type: application/json" \
+         -d '{"question": "what is docker?"}' 
 """
 import os
 import time
@@ -77,11 +77,12 @@ async def security_headers(request: Request, call_next):
     """Thêm security headers vào mọi response."""
     response: Response = await call_next(request)
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Frame-Options"] = "DENY" 
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     # Ẩn server info
-    response.headers.pop("server", None)
+    if "server" in response.headers:
+        del response.headers["server"]
     return response
 
 
@@ -102,7 +103,7 @@ class LoginRequest(BaseModel):
 # ──────────────────────────────────────────────────────────
 
 @app.post("/auth/token")
-def login(body: LoginRequest):
+def login(body: LoginRequest): 
     """
     Public endpoint. Đổi username/password lấy JWT token.
     Token hết hạn sau 60 phút.
