@@ -1,27 +1,17 @@
 import time
-import redis
-from app.config import settings
+from collections import defaultdict, deque
 
-r = redis.from_url(settings.REDIS_URL, decode_responses=True)
+_store = defaultdict(deque)
 
-class RateLimiter:
-    def __init__(self, limit_per_minute: int):
-        self.limit = limit_per_minute
+def check_rate_limit(key: str, limit: int):
+    now = time.time()
+    q = _store[key]
 
-    def is_allowed(self, user_id: str) -> bool:
-        key = f"rate:{user_id}"
-        now = int(time.time())
+    while q and q[0] < now - 60:
+        q.popleft()
 
-        window = now // 60
-        redis_key = f"{key}:{window}"
+    if len(q) >= limit:
+        return False
 
-        current = r.get(redis_key)
-        if current and int(current) >= self.limit:
-            return False
-
-        pipe = r.pipeline()
-        pipe.incr(redis_key, 1)
-        pipe.expire(redis_key, 60)
-        pipe.execute()
-
-        return True
+    q.append(now)
+    return True
